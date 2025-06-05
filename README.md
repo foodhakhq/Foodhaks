@@ -1,95 +1,117 @@
-```markdown
-# FoodHaks
-This repo contains the scripts for Foodhaks staging and production environment.
-## Overview
+````markdown
+# Foodhak "Foodhaks" Service
 
-This documentation provides an overview of the API used to generate personalized food-related tips, known as "Foodhak." The API leverages GPT-4o, a Large Language Model (LLM) from OpenAI, to create these tips based on a user’s health goals, dietary preferences, and specific ingredients. The system utilizes OpenSearch for retrieving user profiles and is hosted on a Google Cloud Platform (GCP) VM instance running a Flask server.
+**Personalized, bite-sized health tips (Foodhaks!) for Foodhak users.  
+Uses GPT-4o for playful, evidence-based recommendations from user profile data.  
+Outputs a ready-to-display message, preview, and context URL.**
 
-## Endpoint
+---
 
-### Generate Foodhak
+## 🌐 Environments
 
-This endpoint generates a personalized Foodhak for a user based on their profile information stored in OpenSearch. The Foodhak includes practical dietary advice, a relevant URL, and a preview description.
+- **Production:** `https://ai-foodhak.com`
+- **Staging:**    `https://staging.ai-foodhak.com`
 
-**Endpoint URL:**
+---
 
-`https://www.foodhakai.com/generate/foodhak`
+## 🧠 What does it do?
 
-**HTTP Method:**
+- Takes a user ID and fetches their Foodhak profile.
+- Picks a random health goal and recommended ingredient.
+- Crafts a unique "Foodhak!" tip with extracts, context URL, and preview using GPT-4o.
+- Focuses on *positive* ("recommended") ingredients and practical tips—no negative/avoidance messaging.
+- Returns all fields in a consistent JSON schema for UI or in-app use.
 
-`POST`
+---
 
-**Headers:**
+## 🚦 Endpoints
 
-- `Content-Type: application/json`
-- `Authorization: Bearer test123`
+| Method | Endpoint              | Description                                      |
+|--------|----------------------|--------------------------------------------------|
+| POST   | `/generate2/foodhak` | Generate a new Foodhak! for a user               |
+| GET    | `/health`            | Service health check                             |
 
-**Request Payload:**
+> **All endpoints require:**  
+> `Authorization: Bearer <API_KEY>`
 
-```json
-{
-  "user_id": "32a40b12-2434-473a-9270-df47db9ceefd"
-}
+---
+
+## 🛠️ Usage
+
+### 1. Generate a Foodhak — POST `/generate2/foodhak`
+
+#### Production
+
+```bash
+curl -X POST https://ai-foodhak.com/generate2/foodhak \
+  -H "Authorization: Bearer <API_KEY>" \
+  -H "Content-Type: application/json" \
+  -d '{"user_id": "YOUR_USER_ID"}'
+````
+
+#### Staging
+
+```bash
+curl -X POST https://staging.ai-foodhak.com/generate2/foodhak \
+  -H "Authorization: Bearer <API_KEY>" \
+  -H "Content-Type: application/json" \
+  -d '{"user_id": "YOUR_USER_ID"}'
 ```
 
-**Parameters:**
-
-- `user_id`: A unique identifier for the user. This is required to retrieve the user’s profile and generate a personalized Foodhak.
-
-### Example Response
+#### Example Success Response
 
 ```json
 {
-  "common_name": "potato",
-  "response": "Hey Sakshi!\\n\\nLooking to shed some pounds while staying satisfied? Here's a simple yet super effective food hack for you: Embrace the power of potatoes! 🍠\\n\\n**Foodhak Alert: Preload with Potatoes for Weight Loss**\\n\\n**Why Potatoes?** They're not just comfort food, but they are also amazing at keeping you full for longer. Potatoes improve satiety, which means they help curb those pesky hunger pangs.\\n\\n**How to Use This Hack:**\\n- **Start a Meal with a Small Potato Dish**: Enjoying a small serving of boiled or baked potatoes before your main meal can help you feel fuller and reduce overall calorie intake.\\n- **Healthy Preparation Matters**: Keep it healthy by avoiding frying. Instead, try boiling, baking, or steaming your potatoes. Spice them up with herbs, a squeeze of lemon, or a sprinkle of your favorite low-calorie seasonings.\\n- **Pair with Protein**: Combine with a source of lean protein for a balanced, satisfying start to your meal.\\n\\n**Benefits of Potatoes:**\\n- **Rich in Fiber**: Keeps your digestive system happy.\\n- **High in Vitamins and Minerals**: Packed with Vitamin C, potassium, and Vitamin B6.\\n- **Low-Calorie but Filling**: Helps you manage weight without feeling deprived.\\n\\nSo next time you're prepping your meals, think potatoes! They might just become your new go-to for a delicious, satisfying start that supports your weight loss goals.\\n\\nHappy, healthy eating!\\n\\n👩‍🍳✨",
-  "url": "<https://pubmed.ncbi.nlm.nih.gov/32927753>",
+  "common_name": "chia seeds",
+  "response": "Hey there! For your heart health, add a sprinkle of chia seeds to your breakfast. These little seeds pack in omega-3s and fiber—easy way to keep things moving and stay full!",
+  "url": "https://www.healthline.com/nutrition/chia-seeds-benefits",
   "food_type": "recommended",
-  "preview": "\\"Spud-tacular Weight Loss: Potatoes to Curb Cravings! 🥔✨\\""
+  "preview": "Chia seeds: small size, mighty heart-loving impact!"
 }
 ```
 
-### Response Fields:
+#### Example Error Response
 
-- `common_name`: The name of the ingredient related to the Foodhak (e.g., "potato").
-- `response`: A detailed, engaging Foodhak message that includes dietary advice tailored to the user's health goals.
-- `url`: A link to a relevant study or article that supports the advice provided in the Foodhak.
-- `food_type`: Indicates whether the Foodhak is a recommendation or something to avoid (e.g., "recommended").
-- `preview`: A short, catchy preview of the Foodhak designed to pique the user’s interest.
+```json
+{
+  "error": "User profile not found."
+}
+```
 
-## Technical Details
+---
 
-- **OpenAI GPT-4o**: The model used to generate the Foodhak and preview content.
-- **OpenSearch**: Utilized for retrieving user profiles based on the `user_id`.
-- **Flask Server**: The API is hosted on a GCP VM instance running Flask.
-- **Random Selection**: The system randomly selects a relevant ingredient and relationship from the user's profile to generate a personalized Foodhak.
-
-## Example Usage
-
-### Foodhak (Production)
+### 2. Health Check
 
 ```bash
-curl -X POST https://www.foodhakai.com/generate/foodhak \
--H "Content-Type: application/json" \
--H "Authorization: Bearer viJ8u142.NaQl7JEW5u8bEJpqnnRuvilTfDbHyWty" \
--d '{
-  "user_id": "9acc25b6-b238-407e-bc85-44d723bf4551"
-}'
+curl https://ai-foodhak.com/health
 ```
 
-### Foodhak (Staging)
+**Result:**
 
-```bash
-curl -X POST https://www.staging-foodhakai.com/generate2/foodhak \
--H "Content-Type: application/json" \
--H "Authorization: Bearer mS6WabEO.1Qj6ONyvNvHXkWdbWLFi9mLMgHFVV4m7" \
--d '{
-  "user_id": "32a40b12-2434-473a-9270-df47db9ceefd"
-}'
+```json
+{
+  "status": "healthy",
+  "message": "Foodhak Service is up and running."
+}
 ```
 
-## Conclusion
+---
 
-This API allows for the generation of personalized, health-oriented tips known as Foodhak. By integrating user-specific data with advanced AI models, it delivers tailored dietary advice designed to be both informative and engaging. The system efficiently retrieves user profiles, processes the data, and produces a Foodhak that aligns with the user's health goals, making it a powerful tool for personalized nutrition advice.
-```
+## ⚡ Features
 
-This README.md will help explain the capabilities and usage of the FoodHak API clearly and effectively to potential users and contributors to the project.
+* **AI-generated, evidence-based health tips** ("Foodhaks!") customized per user profile.
+* **Always positive**: Recommends beneficial ingredients, avoids negative or restrictive language.
+* **Includes a preview** (short, catchy version for UI teasers).
+* **Response includes**: ingredient, full tip, preview, type, and context URL.
+* **Uses OpenSearch for profiles and GPT-4o for content generation.**
+* **API-key protected.**
+
+---
+
+## 📝 Developer Notes
+
+* All secrets/API keys are sourced from environment variables.
+* Only `"recommended"` Foodhaks are enabled; avoidance can be enabled in future if needed.
+* The route is `/generate2/foodhak` to avoid conflicts with previous implementations.
+
+---
